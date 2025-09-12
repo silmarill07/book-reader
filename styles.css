@@ -515,7 +515,7 @@ body {
     flex: 1;
     overflow-y: auto;
     padding: var(--spacing-lg);
-    height: calc(100vh - var(--header-height) - 60px);
+    height: calc(100vh - var(--header-height));
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y;
     user-select: none;
@@ -599,50 +599,6 @@ body {
     text-align: justify;
 }
 
-.reader-footer {
-    position: sticky;
-    bottom: 0;
-    background-color: var(--surface-color);
-    border-top: 1px solid var(--divider-color);
-    padding: var(--spacing-md);
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    transform: translateY(0);
-    opacity: 1;
-}
-
-.reader-footer.hidden {
-    transform: translateY(100%);
-    opacity: 0;
-    pointer-events: none;
-}
-
-.progress-info {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-}
-
-.progress-info span {
-    font-size: 14px;
-    color: var(--text-secondary);
-    min-width: 40px;
-}
-
-.progress-bar {
-    flex: 1;
-    height: 4px;
-    background-color: var(--divider-color);
-    border-radius: 2px;
-    overflow: hidden;
-}
-
-.progress-fill {
-    height: 100%;
-    background-color: var(--accent-color);
-    transition: width 0.3s ease;
-    border-radius: 2px;
-}
-
 /* Модальные окна */
 .modal {
     position: fixed;
@@ -663,6 +619,10 @@ body {
 .modal.open {
     opacity: 1;
     visibility: visible;
+}
+
+.main-content, .reader-content {
+    padding-bottom: 0 !important;
 }
 
 .modal-content {
