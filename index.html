@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Reader</title>
+    <link rel="icon" type="image/png" href="favicons/favicon-16x16.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Главный контейнер приложения -->
+    <div id="app" class="app">
+        <!-- Верхняя панель навигации -->
+        <header class="app-header">
+            <div class="header-content">
+                <button id="homeBtn" class="icon-btn">
+                    <i class="fas fa-home"></i>
+                </button>
+                <h1 class="app-title">Book Reader</h1>
+                <div class="header-actions">
+                    <button id="chaptersBtn" class="icon-btn">
+                        <i class="fas fa-list"></i>
+                    </button>
+                    <button id="settingsBtn" class="icon-btn">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Боковое меню -->
+        <nav id="sideMenu" class="side-menu">
+            <div class="menu-header">
+                <h2 id="menuTitle">Мої книги</h2>
+                <button id="closeMenuBtn" class="icon-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="menu-content">
+                <div id="menuContent">
+                    <!-- Контент будет изменяться динамически -->
+                </div>
+            </div>
+        </nav>
+
+        <!-- Основной контент -->
+        <main class="main-content">
+            <!-- Экран библиотеки -->
+            <div id="libraryScreen" class="screen active">
+                <div class="library-header">
+                    <h2>Моя бібліотека</h2>
+                </div>
+                <div id="libraryContent" class="library-content">
+                    <div class="empty-state">
+                        <i class="fas fa-book-open"></i>
+                        <h3>Додайте свою першу книгу</h3>
+                        <p>Щоб почати читання</p>
+                    </div>
+                </div>
+                <!-- Плавающая кнопка добавления книг -->
+                <button id="addBookBtnMain" class="fab-bottom">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+
+            <!-- Экран чтения -->
+            <div id="readerScreen" class="screen">
+                <div class="reader-content">
+                    <div id="bookContent" class="book-content">
+                        <!-- Содержимое книги будет добавлено динамически -->
+                    </div>
+                </div>
+                <div class="reader-footer">
+                    <div class="progress-info">
+                        <span id="progressText">0%</span>
+                        <div class="progress-bar">
+                            <div id="progressFill" class="progress-fill"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Скрытый input для загрузки файлов -->
+        <input type="file" id="fileInput" accept=".fb2,.epub,.txt" multiple style="display: none;">
+
+        <!-- Модальные окна -->
+        
+        <!-- Настройки -->
+        <div id="settingsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Налаштування</h3>
+                    <button id="closeSettingsBtn" class="icon-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="setting-group">
+                        <label>Розмір шрифту</label>
+                        <div class="font-size-controls">
+                            <button id="fontSizeDecrease" class="icon-btn">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <span id="fontSizeValue">16px</span>
+                            <button id="fontSizeIncrease" class="icon-btn">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label>Міжрядковий інтервал</label>
+                        <div class="line-height-controls">
+                            <button id="lineHeightDecrease" class="icon-btn">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <span id="lineHeightValue">1.5</span>
+                            <button id="lineHeightIncrease" class="icon-btn">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label>Тема</label>
+                        <div class="theme-selector">
+                            <div class="theme-options">
+                                <div class="theme-option light" data-theme="light">
+                                    <div class="theme-preview light-preview"></div>
+                                    <span>Світла</span>
+                                </div>
+                                <div class="theme-option sepia" data-theme="sepia">
+                                    <div class="theme-preview sepia-preview"></div>
+                                    <span>Сепія</span>
+                                </div>
+                                <div class="theme-option dark" data-theme="dark">
+                                    <div class="theme-preview dark-preview"></div>
+                                    <span>Темна</span>
+                                </div>
+                                <div class="theme-option black" data-theme="black">
+                                    <div class="theme-preview black-preview"></div>
+                                    <span>Чорна</span>
+                                </div>
+                                <div class="theme-option blue" data-theme="blue">
+                                    <div class="theme-preview blue-preview"></div>
+                                    <span>Синьо-зелена</span>
+                                </div>
+                                <div class="theme-option green" data-theme="green">
+                                    <div class="theme-preview green-preview"></div>
+                                    <span>Зелена</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Список глав -->
+        <div id="chaptersModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Глави</h3>
+                    <button id="closeChaptersBtn" class="icon-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="chaptersList" class="chapters-list">
+                        <!-- Список глав будет добавлен динамически -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Подтверждение удаления -->
+        <div id="deleteModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Видалити книгу</h3>
+                </div>
+                <div class="modal-body">
+                    <p>Ви впевнені, що хочете видалити цю книгу?</p>
+                    <div class="modal-actions">
+                        <button id="cancelDeleteBtn" class="btn-secondary">Скасувати</button>
+                        <button id="confirmDeleteBtn" class="btn-danger">Видалити</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

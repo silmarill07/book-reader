@@ -1,0 +1,992 @@
+/* Material Design CSS для Book Reader */
+
+:root {
+    /* Цветовая палитра */
+    --primary-color: #2196F3;
+    --primary-dark: #1976D2;
+    --accent-color: #FF4081;
+    --background-color: #FAFAFA;
+    --surface-color: #FFFFFF;
+    --text-primary: #212121;
+    --text-secondary: #757575;
+    --divider-color: #BDBDBD;
+    --shadow: 0 2px 4px rgba(0,0,0,0.1);
+    --shadow-elevated: 0 4px 8px rgba(0,0,0,0.15);
+    
+    /* Размеры */
+    --header-height: 56px;
+    --border-radius: 8px;
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+}
+
+/* Темные темы */
+[data-theme="dark"] {
+    --background-color: #121212;
+    --surface-color: #1E1E1E;
+    --text-primary: #FFFFFF;
+    --text-secondary: #B0B0B0;
+    --divider-color: #333333;
+    --primary-color: #2D2D2D;
+    --accent-color: #4A4A4A;
+}
+
+[data-theme="black"] {
+    --background-color: #000000;
+    --surface-color: #111111;
+    --text-primary: #FFFFFF;
+    --text-secondary: #888888;
+    --divider-color: #222222;
+    --primary-color: #1A1A1A;
+    --accent-color: #333333;
+}
+
+[data-theme="sepia"] {
+    --background-color: #F4F1EA;
+    --surface-color: #FDF6E3;
+    --text-primary: #5C4B37;
+    --text-secondary: #8B7355;
+    --divider-color: #D4C4A8;
+    --primary-color: #8B6F47;
+    --accent-color: #A68B5B;
+}
+
+[data-theme="blue"] {
+    --background-color: #E3F2FD;
+    --surface-color: #F3F9FF;
+    --text-primary: #0D47A1;
+    --text-secondary: #1565C0;
+    --divider-color: #90CAF9;
+    --primary-color: #1976D2;
+    --accent-color: #2196F3;
+}
+
+[data-theme="green"] {
+    --background-color: #E8F5E8;
+    --surface-color: #F1F8E9;
+    --text-primary: #1B5E20;
+    --text-secondary: #2E7D32;
+    --divider-color: #A5D6A7;
+    --primary-color: #2E7D32;
+    --accent-color: #4CAF50;
+}
+
+/* Базовые стили */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: relative;
+}
+
+/* Заголовок приложения */
+.app-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--header-height);
+    background-color: var(--primary-color);
+    color: white;
+    z-index: 1000;
+    box-shadow: var(--shadow-elevated);
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    padding: 0 var(--spacing-md);
+}
+
+/* Убираем header-left, теперь есть кнопка домой */
+
+.header-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.app-title {
+    font-size: 20px;
+    font-weight: 500;
+    flex: 1;
+    text-align: center;
+    margin: 0 var(--spacing-md);
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 20px;
+    padding: var(--spacing-sm);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+}
+
+.icon-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.icon-btn:active {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Боковое меню */
+.side-menu {
+    position: fixed;
+    top: 0;
+    left: -300px;
+    width: 300px;
+    height: 100vh;
+    background-color: var(--surface-color);
+    z-index: 1001;
+    transition: left 0.3s ease;
+    box-shadow: var(--shadow-elevated);
+    overflow-y: auto;
+}
+
+.side-menu.open {
+    left: 0;
+}
+
+.menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--divider-color);
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.menu-header h2 {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.menu-content {
+    padding: var(--spacing-md);
+}
+
+.add-book-btn {
+    width: 100%;
+    padding: var(--spacing-md);
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+.add-book-btn:hover {
+    background-color: var(--primary-color);
+}
+
+/* Основной контент */
+.main-content {
+    flex: 1;
+    margin-top: var(--header-height);
+    position: relative;
+    overflow: hidden;
+}
+
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    background-color: var(--background-color);
+}
+
+.screen.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Библиотека */
+.library-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-lg) var(--spacing-md);
+    background-color: var(--surface-color);
+    border-bottom: 1px solid var(--divider-color);
+}
+
+.library-header h2 {
+    font-size: 24px;
+    font-weight: 400;
+}
+
+.fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: var(--shadow-elevated);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fab:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+}
+
+.fab-bottom {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: var(--shadow-elevated);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.fab-bottom:hover {
+    background-color: var(--primary-color);
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+}
+
+.library-content {
+    padding: var(--spacing-lg);
+    min-height: calc(100vh - var(--header-height) - 80px);
+}
+
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-xl) var(--spacing-md);
+    color: var(--text-secondary);
+}
+
+.empty-state i {
+    font-size: 64px;
+    margin-bottom: var(--spacing-lg);
+    color: var(--divider-color);
+}
+
+.empty-state h3 {
+    font-size: 24px;
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-primary);
+}
+
+.empty-state p {
+    margin-bottom: var(--spacing-xl);
+    font-size: 16px;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: var(--spacing-md) var(--spacing-xl);
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+}
+
+/* Список книг */
+.books-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.book-card {
+    background-color: var(--surface-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.book-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-elevated);
+}
+
+.book-cover {
+    width: 100%;
+    height: 200px;
+    background-color: var(--divider-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.book-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.book-cover .default-cover {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 48px;
+}
+
+.book-cover .default-cover img {
+    width: 100%;
+}
+
+.book-info {
+    padding: var(--spacing-md);
+}
+
+.book-title {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-primary);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.book-author {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.book-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background-color: var(--divider-color);
+}
+
+.book-progress-fill {
+    height: 100%;
+    background-color: var(--accent-color);
+    transition: width 0.3s ease;
+}
+
+/* Экран чтения */
+.reader-header {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-md);
+    background-color: var(--surface-color);
+    border-bottom: 1px solid var(--divider-color);
+    position: sticky;
+    top: var(--header-height);
+    z-index: 100;
+}
+
+.reader-header .book-info {
+    flex: 1;
+    margin: 0 var(--spacing-md);
+}
+
+.reader-header .book-info h3 {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.reader-header .book-info p {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.reader-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+/* Стили для хедера экрана чтения */
+.reader-header {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-md);
+    background-color: var(--surface-color);
+    border-bottom: 1px solid var(--divider-color);
+    position: sticky;
+    top: var(--header-height);
+    z-index: 100;
+}
+
+.reader-header .book-info {
+    flex: 1;
+    margin: 0 var(--spacing-md);
+    text-align: center;
+}
+
+.reader-header .book-info h3 {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 2px;
+    color: var(--text-primary);
+}
+
+.reader-header .book-info p {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.reader-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-lg);
+    height: calc(100vh - var(--header-height) - 60px);
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.book-content {
+    max-width: 800px;
+    margin: 0 auto;
+    font-size: 18px;
+    line-height: 1.8;
+    color: var(--text-primary);
+    min-height: 100%;
+    padding-bottom: var(--spacing-xl);
+}
+
+.chapter-content {
+    margin-top: var(--spacing-lg);
+}
+
+/* Кнопка следующей главы */
+.next-chapter-section {
+    margin-top: var(--spacing-xl);
+    padding: var(--spacing-lg) 0;
+    text-align: center;
+    border-top: 1px solid var(--divider-color);
+}
+
+.next-chapter-btn {
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    padding: var(--spacing-md) var(--spacing-xl);
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    box-shadow: var(--shadow);
+}
+
+.next-chapter-btn:hover {
+    background-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-elevated);
+}
+
+.next-chapter-btn:active {
+    transform: translateY(0);
+}
+
+.next-chapter-btn i {
+    font-size: 14px;
+}
+
+.book-content h1, .book-content h2, .book-content h3 {
+    margin: var(--spacing-xl) 0 var(--spacing-lg) 0;
+    color: var(--text-primary);
+}
+
+.book-content h1 {
+    font-size: 28px;
+    font-weight: 300;
+}
+
+.book-content h2 {
+    font-size: 24px;
+    font-weight: 400;
+}
+
+.book-content h3 {
+    font-size: 20px;
+    font-weight: 500;
+}
+
+.book-content p {
+    margin-bottom: var(--spacing-lg);
+    text-align: justify;
+}
+
+.reader-footer {
+    position: sticky;
+    bottom: 0;
+    background-color: var(--surface-color);
+    border-top: 1px solid var(--divider-color);
+    padding: var(--spacing-md);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.reader-footer.hidden {
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.progress-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.progress-info span {
+    font-size: 14px;
+    color: var(--text-secondary);
+    min-width: 40px;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 4px;
+    background-color: var(--divider-color);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: var(--accent-color);
+    transition: width 0.3s ease;
+    border-radius: 2px;
+}
+
+/* Модальные окна */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.modal.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background-color: var(--surface-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-elevated);
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: hidden;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.modal.open .modal-content {
+    transform: scale(1);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--divider-color);
+}
+
+.modal-header h3 {
+    font-size: 20px;
+    font-weight: 500;
+}
+
+.modal-body {
+    padding: var(--spacing-lg);
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* Настройки */
+.setting-group {
+    margin-bottom: var(--spacing-xl);
+}
+
+.setting-group label {
+    display: block;
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: var(--spacing-md);
+    color: var(--text-primary);
+}
+
+.font-size-controls,
+.line-height-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-lg);
+    background-color: var(--background-color);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+}
+
+.font-size-controls span,
+.line-height-controls span {
+    font-size: 16px;
+    font-weight: 500;
+    min-width: 60px;
+    text-align: center;
+    color: var(--text-primary);
+}
+
+/* Выбор темы */
+.theme-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+}
+
+.theme-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--spacing-md);
+    border: 2px solid transparent;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.theme-option:hover {
+    background-color: var(--background-color);
+}
+
+.theme-option.selected {
+    border-color: var(--primary-color);
+    background-color: rgba(33, 150, 243, 0.1);
+}
+
+.theme-preview {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-bottom: var(--spacing-sm);
+    border: 2px solid var(--divider-color);
+}
+
+.light-preview {
+    background: linear-gradient(135deg, #FFFFFF, #F5F5F5);
+    border: 2px solid #2196F3;
+}
+
+.sepia-preview {
+    background: linear-gradient(135deg, #F4F1EA, #8B6F47);
+    border: 2px solid #A68B5B;
+}
+
+.dark-preview {
+    background: linear-gradient(135deg, #121212, #2D2D2D);
+    border: 2px solid #4A4A4A;
+}
+
+.black-preview {
+    background: linear-gradient(135deg, #000000, #1A1A1A);
+    border: 2px solid #333333;
+}
+
+.blue-preview {
+    background: linear-gradient(135deg, #E3F2FD, #1976D2);
+    border: 2px solid #2196F3;
+}
+
+.green-preview {
+    background: linear-gradient(135deg, #E8F5E8, #2E7D32);
+    border: 2px solid #4CAF50;
+}
+
+.theme-option span {
+    font-size: 12px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+/* Список глав */
+.chapters-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.chapter-item {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--divider-color);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.chapter-item:hover {
+    background-color: var(--background-color);
+}
+
+.chapter-item:last-child {
+    border-bottom: none;
+}
+
+.chapter-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.chapter-progress {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* Главы в боковом меню */
+.side-menu .chapters-list {
+    max-height: calc(100vh - 120px);
+}
+
+.side-menu .chapter-item {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-xs);
+    border-bottom: none;
+}
+
+.side-menu .chapter-item:hover {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.side-menu .chapter-item:hover .chapter-title,
+.side-menu .chapter-item:hover .chapter-progress {
+    color: white;
+}
+
+.side-menu .chapter-item.current {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.side-menu .chapter-item.current .chapter-title,
+.side-menu .chapter-item.current .chapter-progress {
+    color: white;
+}
+
+/* Кнопки действий */
+.modal-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: flex-end;
+    margin-top: var(--spacing-lg);
+}
+
+.btn-secondary {
+    background-color: var(--divider-color);
+    color: var(--text-primary);
+    border: none;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-secondary:hover {
+    background-color: var(--text-secondary);
+}
+
+.btn-danger {
+    background-color: #F44336;
+    color: white;
+    border: none;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-danger:hover {
+    background-color: #D32F2F;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .side-menu {
+        width: 280px;
+    }
+    
+    .books-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: var(--spacing-md);
+    }
+    
+    .book-cover {
+        height: 180px;
+    }
+    
+    .theme-options {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .modal-content {
+        margin: var(--spacing-md);
+        max-width: calc(100vw - 32px);
+    }
+}
+
+@media (max-width: 480px) {
+    .books-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+    
+    .book-cover {
+        height: 160px;
+    }
+    
+    .book-title {
+        font-size: 14px;
+    }
+    
+    .book-author {
+        font-size: 12px;
+    }
+}
+
+/* Анимации */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.book-card {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Скрытие скроллбара */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--background-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--divider-color);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
