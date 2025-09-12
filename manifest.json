@@ -1,35 +1,37 @@
 {
-"name": "Book Reader",
-"short_name": "Book Reader",
-"start_url": "https://silmarill07.github.io/book-reader/",
-"display": "standalone",
-"description": "An app for reading books",
-"lang": " uk",
-"dir": "auto",
-"theme_color": "#000000",
-"background_color": "#000000",
-"orientation": "any",
-"icons": [
+  "name": "Book Reader",
+  "short_name": "Book Reader",
+  "start_url": "https://silmarill07.github.io/book-reader/",
+  "display": "standalone",
+  "description": "An app for reading books",
+  "lang": " uk",
+  "dir": "auto",
+  "theme_color": "#000000",
+  "background_color": "#000000",
+  "orientation": "any",
+  "icons": [
     {
-        "src": "img/book_logo512.png",
-        "sizes": "512x512",
-        "type": "image/png",
-        "purpose": "maskable"
+      "src": "img/book_logo512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
-        "src": "img/book_logo192.png",
-        "sizes": "192x192",
-        "type": "image/png",
-        "purpose": "any"
+      "src": "img/book_logo192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
     }
-],
-
-"prefer_related_applications": false,
-"shortcuts": [
+  ],
+  "prefer_related_applications": false,
+  "shortcuts": [
     {
-        "name":"Book Reader",
-        "url":"https://silmarill07.github.io/book-reader/",
-        "description":"A description of the functionality of this shortcut"
+      "name": "Book Reader",
+      "url": "https://silmarill07.github.io/book-reader/",
+      "description": "A description of the functionality of this shortcut"
     }
-]
+  ],
+  "categories": [
+    "books"
+  ]
 }
