@@ -1,4 +1,5 @@
-// Book Reader - JavaScript функциональность
+
+// Book Reader - JavaScript функциональность для WebView
 
 class BookReader {
     constructor() {
@@ -88,7 +89,7 @@ class BookReader {
                 }
             } catch (error) {
                 console.error('Ошибка при загрузке книги:', error);
-                alert(`Ошибка при загрузке файла ${file.name}`);
+                alert(`Ошибка при загрузке файла ${file.name}: ${error.message}`);
             }
         }
         
@@ -99,7 +100,15 @@ class BookReader {
     }
 
     async parseBook(file) {
-        const fileExtension = file.name.split('.').pop().toLowerCase();
+        // Получаем расширение файла из MIME типа или имени файла
+        const fileExtension = this.getFileExtension(file);
+        
+        console.log('Parsing file:', {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            extension: fileExtension
+        });
         
         switch (fileExtension) {
             case 'fb2':
@@ -109,21 +118,87 @@ class BookReader {
             case 'epub':
                 return await this.parseEPUB(file);
             default:
-                throw new Error('Неподдерживаемый формат файла');
+                throw new Error(`Неподдерживаемый формат файла: ${fileExtension}. Поддерживаются: FB2, TXT, EPUB`);
         }
+    }
+
+    getFileExtension(file) {
+        // Сначала пытаемся определить по MIME типу
+        const mimeTypes = {
+            'application/x-fictionbook+xml': 'fb2',
+            'application/x-fictionbook': 'fb2',
+            'text/xml': 'fb2', // FB2 файлы могут иметь такой MIME тип
+            'application/xml': 'fb2', // или такой
+            'text/plain': 'txt',
+            'application/epub+zip': 'epub'
+        };
+        
+        if (file.type && mimeTypes[file.type]) {
+            return mimeTypes[file.type];
+        }
+        
+        // Если MIME тип не определен, используем расширение файла
+        const nameExtension = file.name.split('.').pop().toLowerCase();
+        
+        // Проверяем, что это действительно поддерживаемое расширение
+        const supportedExtensions = ['fb2', 'txt', 'epub'];
+        if (supportedExtensions.includes(nameExtension)) {
+            return nameExtension;
+        }
+        
+        // Если файл с неизвестным расширением, но содержимое может быть XML (FB2)
+        if (file.type === 'text/xml' || file.type === 'application/xml' || 
+            file.name.toLowerCase().includes('fb2')) {
+            return 'fb2';
+        }
+        
+        return nameExtension;
     }
 
     async parseFB2(file) {
         const text = await this.readFileAsText(file);
+        
+        // Проверяем, что это действительно FB2 файл
+        if (!text.includes('<FictionBook') && !text.includes('<fictionbook')) {
+            throw new Error('Файл не является валидным FB2 файлом');
+        }
+        
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(text, 'text/xml');
         
+        // Проверяем на ошибки парсинга
+        const parserError = xmlDoc.querySelector('parsererror');
+        if (parserError) {
+            console.warn('XML parsing warning:', parserError.textContent);
+            // Пытаемся очистить и повторно распарсить
+            const cleanText = this.cleanXMLText(text);
+            const cleanXmlDoc = parser.parseFromString(cleanText, 'text/xml');
+            const cleanParserError = cleanXmlDoc.querySelector('parsererror');
+            if (!cleanParserError) {
+                return this.extractFB2Data(cleanXmlDoc, file);
+            }
+        }
+        
+        return this.extractFB2Data(xmlDoc, file);
+    }
+
+    cleanXMLText(text) {
+        // Убираем проблемные символы
+        return text
+            .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Удаляем управляющие символы
+            .replace(/&(?!amp;|lt;|gt;|quot;|apos;)/g, '&amp;') // Экранируем неэкранированные амперсанды
+            .trim();
+    }
+
+    extractFB2Data(xmlDoc, file) {
         // Извлекаем метаданные
         const title = this.getTextContent(xmlDoc, 'book-title') || 
                      this.getTextContent(xmlDoc, 'title') || 
-                     file.name.replace('.fb2', '');
-        const author = this.getTextContent(xmlDoc, 'first-name') + ' ' + 
-                      this.getTextContent(xmlDoc, 'last-name') || 
+                     file.name.replace(/\.(fb2|FB2)$/i, '');
+        
+        const firstName = this.getTextContent(xmlDoc, 'first-name') || '';
+        const lastName = this.getTextContent(xmlDoc, 'last-name') || '';
+        const author = (firstName + ' ' + lastName).trim() || 
                       this.getTextContent(xmlDoc, 'author') || 
                       'Невідомий автор';
         
@@ -135,17 +210,22 @@ class BookReader {
             if (href) {
                 const binaryElement = xmlDoc.querySelector(`binary[id="${href.replace('#', '')}"]`);
                 if (binaryElement) {
-                    const base64 = binaryElement.textContent;
-                    coverImage = `data:image/jpeg;base64,${base64}`;
+                    const base64 = binaryElement.textContent.trim();
+                    const contentType = binaryElement.getAttribute('content-type') || 'image/jpeg';
+                    coverImage = `data:${contentType};base64,${base64}`;
                 }
             }
         }
         
         // Извлекаем содержимое
         const body = xmlDoc.querySelector('body');
-        if (!body) throw new Error('Не удалось найти содержимое книги');
+        if (!body) throw new Error('Не удалось найти содержимое книги в FB2 файле');
         
         const chapters = this.extractChapters(body);
+        
+        if (chapters.length === 0) {
+            throw new Error('Не удалось извлечь главы из FB2 файла');
+        }
         
         return {
             id: this.generateId(),
@@ -164,6 +244,11 @@ class BookReader {
 
     async parseTXT(file) {
         const text = await this.readFileAsText(file);
+        
+        if (!text || text.trim().length === 0) {
+            throw new Error('TXT файл пустой или не читается');
+        }
+        
         const lines = text.split('\n');
         
         // Простое разделение на главы по заголовкам
@@ -171,16 +256,17 @@ class BookReader {
         let currentChapter = { title: 'Глава 1', content: '' };
         
         for (const line of lines) {
-            if (line.trim().match(/^(Глава|Chapter|Розділ)\s+\d+/i) || 
-                line.trim().match(/^\d+\.\s+/) ||
-                (line.trim().length > 0 && line.trim().length < 100 && 
-                 line.trim().toUpperCase() === line.trim() && 
-                 !line.includes('.'))) {
-                
+            const trimmedLine = line.trim();
+            
+            // Определяем заголовки глав
+            if (this.isChapterTitle(trimmedLine)) {
                 if (currentChapter.content.trim()) {
                     chapters.push(currentChapter);
                 }
-                currentChapter = { title: line.trim(), content: '' };
+                currentChapter = { 
+                    title: trimmedLine || `Глава ${chapters.length + 1}`, 
+                    content: '' 
+                };
             } else {
                 currentChapter.content += line + '\n';
             }
@@ -196,7 +282,7 @@ class BookReader {
         
         return {
             id: this.generateId(),
-            title: file.name.replace('.txt', ''),
+            title: file.name.replace(/\.(txt|TXT)$/i, ''),
             author: 'Невідомий автор',
             coverImage: null,
             chapters,
@@ -209,37 +295,88 @@ class BookReader {
         };
     }
 
+    isChapterTitle(line) {
+        if (!line || line.length === 0) return false;
+        
+        // Различные паттерны для определения заголовков глав
+        const patterns = [
+            /^(Глава|Chapter|Розділ)\s+\d+/i,
+            /^\d+\.\s+/,
+            /^[А-ЯA-Z][А-ЯЁЮІЇЄҐA-Z\s]{10,100}$/,
+            /^[IVX]+\.\s+/i,
+        ];
+        
+        return patterns.some(pattern => pattern.test(line)) &&
+               line.length < 100 &&
+               !line.includes('.') ||
+               (line.length > 0 && line.length < 100 && 
+                line.toUpperCase() === line && 
+                !line.includes('!') && !line.includes('?'));
+    }
+
     async parseEPUB(file) {
-        // Упрощенная версия для EPUB (требует дополнительной библиотеки для полной поддержки)
-        throw new Error('EPUB формат пока не поддерживается. Используйте FB2 или TXT файлы.');
+        // Для полной поддержки EPUB нужна дополнительная библиотека JSZip
+        throw new Error('EPUB формат пока не поддерживается в этой версии. Используйте FB2 или TXT файлы.');
     }
 
     extractChapters(body) {
         const chapters = [];
-        const sections = body.querySelectorAll('section, title');
+        const sections = body.querySelectorAll('section');
         
-        let currentChapter = null;
-        
-        for (const element of sections) {
-            if (element.tagName === 'title') {
+        if (sections.length === 0) {
+            // Если нет секций, ищем заголовки
+            const titles = body.querySelectorAll('title, h1, h2, h3');
+            if (titles.length > 0) {
+                let currentChapter = null;
+                const walker = document.createTreeWalker(
+                    body,
+                    NodeFilter.SHOW_ELEMENT,
+                    null,
+                    false
+                );
+                
+                let node;
+                while (node = walker.nextNode()) {
+                    if (['title', 'h1', 'h2', 'h3'].includes(node.tagName.toLowerCase())) {
+                        if (currentChapter) {
+                            chapters.push(currentChapter);
+                        }
+                        currentChapter = {
+                            title: this.getTextContent(node) || 'Глава',
+                            content: ''
+                        };
+                    } else if (currentChapter && node.textContent.trim()) {
+                        currentChapter.content += this.getElementHTML(node);
+                    }
+                }
+                
                 if (currentChapter) {
                     chapters.push(currentChapter);
                 }
-                currentChapter = {
-                    title: this.getTextContent(element) || 'Глава',
-                    content: ''
-                };
-            } else if (currentChapter) {
-                const content = this.getElementHTML(element);
-                currentChapter.content += content;
             }
+        } else {
+            sections.forEach((section, index) => {
+                const titleElement = section.querySelector('title');
+                const title = titleElement ? 
+                             this.getTextContent(titleElement) : 
+                             `Глава ${index + 1}`;
+                
+                chapters.push({
+                    title: title,
+                    content: this.getElementHTML(section)
+                });
+            });
         }
         
-        if (currentChapter) {
-            chapters.push(currentChapter);
+        // Если ничего не найдено, создаем одну главу со всем содержимым
+        if (chapters.length === 0) {
+            chapters.push({ 
+                title: 'Книга', 
+                content: this.getElementHTML(body) 
+            });
         }
         
-        return chapters.length > 0 ? chapters : [{ title: 'Книга', content: this.getElementHTML(body) }];
+        return chapters;
     }
 
     getTextContent(element, selector) {
@@ -248,14 +385,14 @@ class BookReader {
     }
 
     getElementHTML(element) {
-        return element.innerHTML || element.textContent;
+        return element.innerHTML || element.textContent || '';
     }
 
     readFileAsText(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = e => resolve(e.target.result);
-            reader.onerror = reject;
+            reader.onerror = () => reject(new Error('Ошибка чтения файла'));
             reader.readAsText(file, 'UTF-8');
         });
     }
@@ -270,6 +407,7 @@ class BookReader {
                     <i class="fas fa-book-open"></i>
                     <h3>Додайте свою першу книгу</h3>
                     <p>Щоб почати читання</p>
+                    <small>Підтримуються формати: FB2, TXT, EPUB</small>
                 </div>
             `;
         } else {
@@ -301,6 +439,7 @@ class BookReader {
                 <div class="book-info">
                     <div class="book-title">${book.title}</div>
                     <div class="book-author">${book.author}</div>
+                    <div class="book-format">${book.fileType.toUpperCase()}</div>
                 </div>
             </div>
         `).join('');
@@ -459,7 +598,7 @@ class BookReader {
         // Добавляем альтернативный способ отслеживания через MutationObserver
         this.setupProgressObserver();
         
-        // Добавляем обработчик для скрытия/показа полосы прогресса
+        // Добавляем обработчик для сокрытия/показа полосы прогресса
         this.addProgressToggleHandler();
     }
 
