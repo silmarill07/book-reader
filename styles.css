@@ -89,6 +89,7 @@ body {
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-y: auto;
 }
 
 .app {
@@ -511,11 +512,11 @@ body {
 
 .reader-content {
     flex: 1;
-    overflow-y: auto;
+    overflow: visible;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     padding: var(--spacing-lg);
-    height: 100%;
+    height: auto;
     will-change: scroll-position;
     transform: translateZ(0);
 }
