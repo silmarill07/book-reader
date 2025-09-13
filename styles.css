@@ -517,6 +517,7 @@ body {
     padding: var(--spacing-lg);
     height: 100%;
     will-change: scroll-position;
+    transform: translateZ(0);
 }
 
 .book-content {
