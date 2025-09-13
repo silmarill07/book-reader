@@ -222,24 +222,22 @@ body {
     flex: 1;
     margin-top: var(--header-height);
     position: relative;
-    overflow: hidden;
 }
 
 .screen {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease, visibility 0.3s ease;
     background-color: var(--background-color);
+    height: 100%;
+    width: 100%;
+    display: none;
 }
 
 .screen.active {
     opacity: 1;
     visibility: visible;
+    display: block;
 }
 
 /* Библиотека */
@@ -517,7 +515,8 @@ body {
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     padding: var(--spacing-lg);
-    min-height: 100vh;
+    height: 100%;
+    will-change: scroll-position;
 }
 
 .book-content {
