@@ -514,12 +514,10 @@ body {
 .reader-content {
     flex: 1;
     overflow-y: auto;
-    padding: var(--spacing-lg);
-    height: calc(100vh - var(--header-height));
+    scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-y;
-    user-select: none;
-    -webkit-user-select: none;
+    padding: var(--spacing-lg);
+    min-height: 100vh;
 }
 
 .book-content {
@@ -529,7 +527,8 @@ body {
     line-height: 1.8;
     color: var(--text-primary);
     min-height: 100%;
-    padding-bottom: var(--spacing-xl);
+    padding-bottom: 0;
+    /* НЕ ставьте user-select: none */
 }
 
 .chapter-content {
