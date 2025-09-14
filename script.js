@@ -22,6 +22,8 @@ class BookReader {
             lineHeight: 1.8,
             theme: 'light'
         };
+        this.epubBook = null; // To hold the Epub.js Book instance
+        this.rendition = null; // To hold the Epub.js Rendition instance
         
         this.init();
     }
@@ -340,41 +342,29 @@ class BookReader {
             coverImage = await book.coverUrl();
         }
 
-        const chapters = [];
-        for (const item of toc) {
-            // Get chapter content
-            const chapter = await book.getChapter(item.href);
-            
-            // Clean up HTML: remove head/body tags, adjust relative paths if necessary
-            const cleanedHtml = this.cleanChapterHtml(chapter.body);
+        // Convert the EPUB file (Blob) to a Base64 string for storage in localStorage
+        const epubFileBase64 = await this.readFileAsBase64(file);
 
-            chapters.push({
-                title: item.label,
-                content: cleanedHtml
-            });
-        }
+        // The 'chapters' array for EPUBs will just store the TOC for navigation
+        const chapters = toc.map(item => ({
+            title: item.label,
+            href: item.href // Store href for navigation
+        }));
 
         return {
             id: this.generateId(),
             title: title.trim(),
             author: author.trim(),
             coverImage,
-            chapters,
+            chapters, // TOC items
             fileType: 'epub',
             fileName: file.name,
             addedDate: new Date().toISOString(),
             readingProgress: 0,
-            currentChapter: 0,
-            currentPosition: 0
+            currentChapter: 0, // Index of the current chapter in the TOC
+            currentPosition: 0, // CFI for EPUBs
+            epubFile: epubFileBase64 // Store the Base64 encoded EPUB file
         };
-    }
-
-    // Helper function to clean chapter HTML
-    cleanChapterHtml(htmlString) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlString, 'text/html');
-        // Remove head and body tags, return innerHTML of body
-        return doc.body.innerHTML;
     }
 
     extractChapters(body) {
@@ -465,7 +455,7 @@ class BookReader {
                     <i class="fas fa-book-open"></i>
                     <h3>Додайте свою першу книгу</h3>
                     <p>Щоб почати читання</p>
-                    <small>Підтримуються формати: FB2, TXT, EPUB</small>
+                    <small>Підтримуються формати: FB2, TXT</small>
                 </div>
             `;
         } else {

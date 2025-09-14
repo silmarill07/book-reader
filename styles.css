@@ -227,6 +227,7 @@ h2 {
     flex: 1;
     margin-top: var(--header-height);
     position: relative;
+    padding-bottom: 60px; /* Added for fixed footer */
 }
 
 .screen {
@@ -543,6 +544,7 @@ h2 {
 /* Кнопка следующей главы */
 .next-chapter-section {
     margin-top: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
     padding: var(--spacing-lg) 0;
     text-align: center;
     border-top: 1px solid var(--divider-color);
@@ -953,4 +955,50 @@ h2 {
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--text-secondary);
+}
+/* Reader Footer and Progress Bar */
+.reader-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--surface-color);
+    padding: var(--spacing-md) var(--spacing-lg);
+    box-shadow: var(--shadow-elevated);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease-in-out;
+    height: 32px; /* Approximate height */
+}
+
+.reader-footer.hidden {
+    transform: translateY(100%);
+}
+
+.progress-info {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.progress-info span {
+    white-space: nowrap;
+}
+
+.progress-bar {
+    flex-grow: 1;
+    height: 8px;
+    background-color: var(--divider-color);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: var(--accent-color);
+    border-radius: 4px;
+    transition: width 0.3s ease;
 }
