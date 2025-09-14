@@ -1,4 +1,14 @@
 
+// Utility function for debouncing
+function debounce(func, delay) {
+    let timeout;
+    return function(...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), delay);
+    };
+}
+
 // Book Reader - JavaScript функциональность для WebView
 
 class BookReader {
@@ -185,7 +195,7 @@ class BookReader {
     cleanXMLText(text) {
         // Убираем проблемные символы
         return text
-            .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Удаляем управляющие символы
+            .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '') // Удаляем управляющие символы
             .replace(/&(?!amp;|lt;|gt;|quot;|apos;)/g, '&amp;') // Экранируем неэкранированные амперсанды
             .trim();
     }
@@ -315,8 +325,56 @@ class BookReader {
     }
 
     async parseEPUB(file) {
-        // Для полной поддержки EPUB нужна дополнительная библиотека JSZip
-        throw new Error('EPUB формат пока не поддерживается в этой версии. Используйте FB2 или TXT файлы.');
+        const book = ePub(file); // Load the EPUB file
+
+        await book.ready; // Wait for the book to be parsed
+
+        const metadata = await book.loaded.metadata;
+        const toc = await book.loaded.navigation.toc;
+
+        const title = metadata.title || file.name.replace(/\.(epub|EPUB)$/i, '');
+        const author = metadata.creator || 'Невідомий автор';
+
+        let coverImage = null;
+        if (book.cover) {
+            coverImage = await book.coverUrl();
+        }
+
+        const chapters = [];
+        for (const item of toc) {
+            // Get chapter content
+            const chapter = await book.getChapter(item.href);
+            
+            // Clean up HTML: remove head/body tags, adjust relative paths if necessary
+            const cleanedHtml = this.cleanChapterHtml(chapter.body);
+
+            chapters.push({
+                title: item.label,
+                content: cleanedHtml
+            });
+        }
+
+        return {
+            id: this.generateId(),
+            title: title.trim(),
+            author: author.trim(),
+            coverImage,
+            chapters,
+            fileType: 'epub',
+            fileName: file.name,
+            addedDate: new Date().toISOString(),
+            readingProgress: 0,
+            currentChapter: 0,
+            currentPosition: 0
+        };
+    }
+
+    // Helper function to clean chapter HTML
+    cleanChapterHtml(htmlString) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlString, 'text/html');
+        // Remove head and body tags, return innerHTML of body
+        return doc.body.innerHTML;
     }
 
     extractChapters(body) {
@@ -370,9 +428,9 @@ class BookReader {
         
         // Если ничего не найдено, создаем одну главу со всем содержимым
         if (chapters.length === 0) {
-            chapters.push({ 
+            chapters.push({
                 title: 'Книга', 
-                content: this.getElementHTML(body) 
+                content: this.getElementHTML(body)
             });
         }
         
@@ -497,6 +555,9 @@ class BookReader {
         document.getElementById('libraryScreen').classList.remove('active');
         document.getElementById('readerScreen').classList.add('active');
         
+        // Show chaptersBtn
+        document.getElementById('chaptersBtn').style.display = 'flex'; // Assuming it's a flex container
+        
         // Обновляем боковое меню для режима чтения
         this.updateSideMenuForReading();
     }
@@ -538,12 +599,12 @@ class BookReader {
     }
 
     renderBookContent() {
-        if (!this.currentBook || !this.currentBook.chapters[this.currentChapter]) return;
+        if (!this.currentBook || !this.currentBook.chapters[this.currentChapter]) return; 
         
         const chapter = this.currentBook.chapters[this.currentChapter];
         const bookContent = document.getElementById('bookContent');
         
-        if (!bookContent) return;
+        if (!bookContent) return; 
         
         // Проверяем, есть ли следующая глава
         const hasNextChapter = this.currentChapter < this.currentBook.chapters.length - 1;
@@ -580,12 +641,10 @@ class BookReader {
         // Принудительно обновляем стили
         this.applySettings();
         
-        // Прокручиваем к сохраненной позиции
-        if (this.readingPosition > 0) {
-            setTimeout(() => {
-                window.scrollTo(0, this.readingPosition);
-            }, 100);
-        }
+        // Прокручиваем к сохраненной позиции или в начало главы
+        setTimeout(() => {
+            window.scrollTo(0, this.readingPosition);
+        }, 100);
         
         // Отслеживаем прогресс чтения
         this.trackReadingProgress();
@@ -603,22 +662,28 @@ class BookReader {
     }
 
     trackReadingProgress() {
-        if (!this.currentBook) return;
-        
+        if (!this.currentBook) return; 
+
         // Удаляем предыдущие обработчики
         if (this.scrollHandler) {
             window.removeEventListener('scroll', this.scrollHandler);
             window.removeEventListener('resize', this.scrollHandler);
+            const readerContent = document.querySelector('.reader-content');
+            if (readerContent) {
+                readerContent.removeEventListener('scroll', this.scrollHandler);
+            }
+            this.scrollHandler = null;
         }
-        
-        this.scrollHandler = () => {
+
+        // Debounced version of the actual progress tracking logic
+        const debouncedTrack = debounce(() => {
             if (!this.currentBook) return;
-            
+
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
             const windowHeight = window.innerHeight;
             const documentHeight = document.documentElement.scrollHeight;
             const totalChapters = this.currentBook.chapters.length;
-            
+
             console.log('Scroll event:', {
                 scrollTop,
                 windowHeight,
@@ -626,54 +691,53 @@ class BookReader {
                 currentChapter: this.currentChapter,
                 totalChapters
             });
-            
+
             // Рассчитываем прогресс текущей главы
             let chapterProgress = 0;
-            
+
             if (documentHeight <= windowHeight) {
-                // Если контент помещается на экран, считаем главу полностью прочитанной
                 chapterProgress = 1;
             } else {
-                // Рассчитываем прогресс прокрутки внутри главы
                 const maxScroll = documentHeight - windowHeight;
                 if (maxScroll > 0) {
                     chapterProgress = Math.min(1, Math.max(0, scrollTop / maxScroll));
-                } else {
-                    chapterProgress = 1;
                 }
             }
-            
+
             // Рассчитываем общий прогресс книги
             const chaptersRead = this.currentChapter;
             const totalProgress = ((chaptersRead + chapterProgress) / totalChapters) * 100;
-            
+
             console.log('Calculated progress:', {
                 chapterProgress,
                 chaptersRead,
                 totalProgress
             });
-            
+
             this.updateProgressDisplay(totalProgress);
-            
+
             // Сохраняем позицию
             this.currentBook.readingProgress = totalProgress;
             this.currentBook.currentPosition = scrollTop;
             this.saveBooks();
+        }, 150); // Debounce by 150ms
+
+        this.scrollHandler = () => {
+            debouncedTrack();
         };
-        
+
         // Добавляем обработчики
         window.addEventListener('scroll', this.scrollHandler, { passive: true });
         window.addEventListener('resize', this.scrollHandler, { passive: true });
-        
-        // Также добавляем обработчик для контейнера чтения
+
         const readerContent = document.querySelector('.reader-content');
         if (readerContent) {
             readerContent.addEventListener('scroll', this.scrollHandler, { passive: true });
         }
-        
+
         // Вызываем сразу
         this.scrollHandler();
-        
+
         // Также вызываем с задержкой для надежности
         setTimeout(() => {
             this.scrollHandler();
@@ -732,7 +796,7 @@ class BookReader {
         const readerContent = document.querySelector('.reader-content');
         const readerFooter = document.querySelector('.reader-footer');
         
-        if (!readerContent || !readerFooter) return;
+        if (!readerContent || !readerFooter) return; 
         
         // Удаляем предыдущие обработчики
         if (this.progressToggleHandler) {
@@ -791,7 +855,7 @@ class BookReader {
 
     updateSettingsUI() {
         document.getElementById('fontSizeValue').textContent = this.settings.fontSize + 'px';
-        document.getElementById('lineHeightValue').textContent = this.settings.lineHeight;
+        document.getElementById('lineHeightValue').textContent = this.settings.lineHeight.toFixed(1);
         
         // Выделяем текущую тему
         document.querySelectorAll('.theme-option').forEach(option => {
@@ -836,7 +900,7 @@ class BookReader {
     // Главы теперь в боковом меню
 
     goToChapter(chapterIndex) {
-        if (!this.currentBook || !this.currentBook.chapters[chapterIndex]) return;
+        if (!this.currentBook || !this.currentBook.chapters[chapterIndex]) return; 
         
         this.currentChapter = chapterIndex;
         this.readingPosition = 0;
@@ -922,10 +986,10 @@ class BookReader {
     }
 
     renderChaptersInSideMenu() {
-        if (!this.currentBook) return;
+        if (!this.currentBook) return; 
         
         const chaptersList = document.getElementById('chaptersList');
-        if (!chaptersList) return;
+        if (!chaptersList) return; 
         
         chaptersList.innerHTML = this.currentBook.chapters.map((chapter, index) => `
             <div class="chapter-item ${index === this.currentChapter ? 'current' : ''}" data-chapter="${index}">

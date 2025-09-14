@@ -92,6 +92,10 @@ body {
     overflow-y: auto;
 }
 
+h2 {
+    margin: 0 auto;
+}
+
 .app {
     display: flex;
     flex-direction: column;
@@ -890,7 +894,7 @@ body {
     }
     
     .theme-options {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr);
     }
     
     .modal-content {
