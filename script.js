@@ -139,10 +139,11 @@ class BookReader {
         const mimeTypes = {
             'application/x-fictionbook+xml': 'fb2',
             'application/x-fictionbook': 'fb2',
-            'text/xml': 'fb2', // FB2 файлы могут иметь такой MIME тип
-            'application/xml': 'fb2', // или такой
+            'text/xml': 'fb2',
+            'application/xml': 'fb2',
             'text/plain': 'txt',
-            'application/epub+zip': 'epub'
+            'application/epub+zip': 'epub',
+            'application/octet-stream': null // Для неопределенных типов проверяем расширение
         };
         
         if (file.type && mimeTypes[file.type]) {
