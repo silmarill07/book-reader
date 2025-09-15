@@ -96,6 +96,12 @@ h2 {
     margin: 0 auto;
 }
 
+#restTime {
+    display: block;
+    margin: 0 auto;
+    font-size: 35px;
+}
+
 .app {
     display: flex;
     flex-direction: column;
@@ -657,6 +663,7 @@ h2 {
 .modal-header h3 {
     font-size: 20px;
     font-weight: 500;
+    margin: 0 auto;
 }
 
 .modal-body {
@@ -1001,4 +1008,12 @@ h2 {
     background-color: var(--accent-color);
     border-radius: 4px;
     transition: width 0.3s ease;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+#restModal .modal-body p {
+    text-align: center;
 }

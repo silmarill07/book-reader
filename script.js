@@ -1,4 +1,3 @@
-
 // Utility function for debouncing
 function debounce(func, delay) {
     let timeout;
@@ -24,6 +23,10 @@ class BookReader {
         };
         this.epubBook = null; // To hold the Epub.js Book instance
         this.rendition = null; // To hold the Epub.js Rendition instance
+        this.restTimer = null;
+        this.restInterval = null;
+        this.readingTime = 2700000; // 45 minutes in milliseconds
+        this.restTime = 60; // 60 seconds
         
         this.init();
     }
@@ -87,6 +90,56 @@ class BookReader {
                 }
             });
         });
+
+        // Page Visibility API
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.stopRestTimer();
+            } else {
+                this.startRestTimer();
+            }
+        });
+    }
+
+    // Rest timer
+    startRestTimer() {
+        if (this.currentBook) {
+            this.restTimer = setTimeout(() => {
+                this.showRestModal();
+            }, this.readingTime);
+        }
+    }
+
+    stopRestTimer() {
+        clearTimeout(this.restTimer);
+    }
+
+    resetRestTimer() {
+        this.stopRestTimer();
+        this.startRestTimer();
+    }
+
+    showRestModal() {
+        document.body.classList.add('modal-open');
+        document.getElementById('restModal').classList.add('open');
+        let timeLeft = this.restTime;
+        const restTimeElement = document.getElementById('restTime');
+        restTimeElement.textContent = timeLeft;
+
+        this.restInterval = setInterval(() => {
+            timeLeft--;
+            restTimeElement.textContent = timeLeft;
+            if (timeLeft <= 0) {
+                this.hideRestModal();
+            }
+        }, 1000);
+    }
+
+    hideRestModal() {
+        document.body.classList.remove('modal-open');
+        document.getElementById('restModal').classList.remove('open');
+        clearInterval(this.restInterval);
+        this.resetRestTimer();
     }
 
     // Управление книгами
@@ -100,8 +153,8 @@ class BookReader {
                     this.books.push(book);
                 }
             } catch (error) {
-                console.error('Ошибка при загрузке книги:', error);
-                alert(`Ошибка при загрузке файла ${file.name}: ${error.message}`);
+                console.error('Помилка при завантаженні книги:', error);
+                alert(`Помилка при завантаженні файлу ${file.name}: ${error.message}`);
             }
         }
         
@@ -130,7 +183,7 @@ class BookReader {
             case 'epub':
                 return await this.parseEPUB(file);
             default:
-                throw new Error(`Неподдерживаемый формат файла: ${fileExtension}. Поддерживаются: FB2, TXT, EPUB`);
+                throw new Error(`Непідтримуваний формат файлу: ${fileExtension}. Підтримуються: FB2, TXT, EPUB`);
         }
     }
 
@@ -173,7 +226,7 @@ class BookReader {
         
         // Проверяем, что это действительно FB2 файл
         if (!text.includes('<FictionBook') && !text.includes('<fictionbook')) {
-            throw new Error('Файл не является валидным FB2 файлом');
+            throw new Error('Файл не є валідним FB2 файлом');
         }
         
         const parser = new DOMParser();
@@ -232,12 +285,12 @@ class BookReader {
         
         // Извлекаем содержимое
         const body = xmlDoc.querySelector('body');
-        if (!body) throw new Error('Не удалось найти содержимое книги в FB2 файле');
+        if (!body) throw new Error('Не вдалося знайти вміст книги в FB2 файлі');
         
         const chapters = this.extractChapters(body);
         
         if (chapters.length === 0) {
-            throw new Error('Не удалось извлечь главы из FB2 файла');
+            throw new Error('Не вдалося витягти глави з FB2 файлу');
         }
         
         return {
@@ -245,7 +298,7 @@ class BookReader {
             title: title.trim(),
             author: author.trim(),
             coverImage,
-            chapters,
+            chapters, // TOC items
             fileType: 'fb2',
             fileName: file.name,
             addedDate: new Date().toISOString(),
@@ -259,7 +312,7 @@ class BookReader {
         const text = await this.readFileAsText(file);
         
         if (!text || text.trim().length === 0) {
-            throw new Error('TXT файл пустой или не читается');
+            throw new Error('TXT файл порожній або не читається');
         }
         
         const lines = text.split('\n');
@@ -328,44 +381,57 @@ class BookReader {
     }
 
     async parseEPUB(file) {
-        const book = ePub(file); // Load the EPUB file
+        console.log('Parsing EPUB file:', file);
+        try {
+            if (!window.ePub) {
+                throw new Error('ePub.js library is not loaded.');
+            }
+            const book = window.ePub(file);
+            console.log('ePub book created:', book);
 
-        await book.ready; // Wait for the book to be parsed
+            await book.ready;
+            console.log('ePub book ready');
 
-        const metadata = await book.loaded.metadata;
-        const toc = await book.loaded.navigation.toc;
+            const metadata = await book.loaded.metadata;
+            console.log('ePub metadata loaded:', metadata);
+            const toc = await book.loaded.navigation.toc;
+            console.log('ePub toc loaded:', toc);
 
-        const title = metadata.title || file.name.replace(/\.(epub|EPUB)$/i, '');
-        const author = metadata.creator || 'Невідомий автор';
+            const title = metadata.title || file.name.replace(/\.(epub|EPUB)$/i, '');
+            const author = metadata.creator || 'Невідомий автор';
 
-        let coverImage = null;
-        if (book.cover) {
-            coverImage = await book.coverUrl();
+            let coverImage = null;
+            if (book.cover) {
+                coverImage = await book.coverUrl();
+                console.log('ePub cover image loaded:', coverImage);
+            }
+
+            const epubFileBase64 = await this.readFileAsBase64(file);
+            console.log('ePub file converted to base64');
+
+            const chapters = toc.map(item => ({
+                title: item.label,
+                href: item.href
+            }));
+
+            return {
+                id: this.generateId(),
+                title: title.trim(),
+                author: author.trim(),
+                coverImage,
+                chapters,
+                fileType: 'epub',
+                fileName: file.name,
+                addedDate: new Date().toISOString(),
+                readingProgress: 0,
+                currentChapter: 0,
+                currentPosition: 0,
+                epubFile: epubFileBase64
+            };
+        } catch (error) {
+            console.error('Error parsing EPUB:', error);
+            throw error;
         }
-
-        // Convert the EPUB file (Blob) to a Base64 string for storage in localStorage
-        const epubFileBase64 = await this.readFileAsBase64(file);
-
-        // The 'chapters' array for EPUBs will just store the TOC for navigation
-        const chapters = toc.map(item => ({
-            title: item.label,
-            href: item.href // Store href for navigation
-        }));
-
-        return {
-            id: this.generateId(),
-            title: title.trim(),
-            author: author.trim(),
-            coverImage,
-            chapters, // TOC items
-            fileType: 'epub',
-            fileName: file.name,
-            addedDate: new Date().toISOString(),
-            readingProgress: 0,
-            currentChapter: 0, // Index of the current chapter in the TOC
-            currentPosition: 0, // CFI for EPUBs
-            epubFile: epubFileBase64 // Store the Base64 encoded EPUB file
-        };
     }
 
     extractChapters(body) {
@@ -441,8 +507,17 @@ class BookReader {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = e => resolve(e.target.result);
-            reader.onerror = () => reject(new Error('Ошибка чтения файла'));
+            reader.onerror = () => reject(new Error('Помилка читання файлу'));
             reader.readAsText(file, 'UTF-8');
+        });
+    }
+
+    readFileAsBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = e => resolve(e.target.result);
+            reader.onerror = () => reject(new Error('Помилка читання файлу'));
+            reader.readAsDataURL(file);
         });
     }
 
@@ -470,7 +545,7 @@ class BookReader {
 
     renderBooks() {
         const booksGrid = document.getElementById('booksGrid');
-        if (!booksGrid) return;
+        if (!booksGrid) return; 
         
         booksGrid.innerHTML = this.books.map(book => `
             <div class="book-card" data-book-id="${book.id}">
@@ -540,6 +615,8 @@ class BookReader {
         
         // Сохраняем ID последней книги
         localStorage.setItem('lastBookId', book.id);
+
+        this.startRestTimer();
     }
 
     showReader() {
@@ -587,6 +664,8 @@ class BookReader {
         
         // Обновляем боковое меню для режима библиотеки
         this.updateSideMenuForLibrary();
+
+        this.stopRestTimer();
     }
 
     renderBookContent() {
@@ -1009,6 +1088,7 @@ class BookReader {
     }
 
     hideAllModals() {
+        document.body.classList.remove('modal-open');
         document.querySelectorAll('.modal').forEach(modal => {
             modal.classList.remove('open');
         });
@@ -1025,7 +1105,7 @@ class BookReader {
             try {
                 this.books = JSON.parse(saved);
             } catch (e) {
-                console.error('Ошибка при загрузке книг:', e);
+                console.error('Помилка при завантаженні книг:', e);
                 this.books = [];
             }
         }
@@ -1041,7 +1121,7 @@ class BookReader {
             try {
                 this.settings = { ...this.settings, ...JSON.parse(saved) };
             } catch (e) {
-                console.error('Ошибка при загрузке настроек:', e);
+                console.error('Помилка при завантаженні налаштувань:', e);
             }
         }
     }
@@ -1059,11 +1139,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Обработка ошибок
 window.addEventListener('error', (e) => {
-    console.error('Ошибка приложения:', e.error);
+    console.error('Помилка програми:', e.error);
 });
 
 // Предотвращение потери данных при закрытии
 window.addEventListener('beforeunload', (e) => {
     // Данные уже сохраняются автоматически при изменениях
 });
-
