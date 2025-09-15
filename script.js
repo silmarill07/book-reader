@@ -251,7 +251,7 @@ class BookReader {
     cleanXMLText(text) {
         // Убираем проблемные символы
         return text
-            .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '') // Удаляем управляющие символы
+            .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '') // Удаляем управляющие символы
             .replace(/&(?!amp;|lt;|gt;|quot;|apos;)/g, '&amp;') // Экранируем неэкранированные амперсанды
             .trim();
     }
@@ -423,7 +423,6 @@ class BookReader {
                 fileType: 'epub',
                 fileName: file.name,
                 addedDate: new Date().toISOString(),
-                readingProgress: 0,
                 currentChapter: 0,
                 currentPosition: 0,
                 epubFile: epubFileBase64
@@ -556,15 +555,16 @@ class BookReader {
                             <i class="fas fa-book"></i>
                         </div>`
                     }
+                    <div class="book-info-on-cover">
+                        <div class="book-title">${book.title}</div>
+                        <div class="book-author">${book.author}</div>
+                    </div>
                     <div class="book-progress">
-                        <div class="book-progress-fill" style="width: ${book.readingProgress}%"></div>
+                        <div class="book-progress-fill" style="width: ${Math.round(book.readingProgress)}%"></div>
+                        <span class="book-progress-text">${Math.round(book.readingProgress)}%</span>
                     </div>
                 </div>
-                <div class="book-info">
-                    <div class="book-title">${book.title}</div>
-                    <div class="book-author">${book.author}</div>
-                    <div class="book-format">${book.fileType.toUpperCase()}</div>
-                </div>
+                <div class="book-format-badge">${book.fileType.toUpperCase()}</div>
             </div>
         `).join('');
         
@@ -661,6 +661,8 @@ class BookReader {
             }
             this.progressToggleHandler = null;
         }
+        
+        this.updateLibrary(); // Обновляем библиотеку для отображения актуального прогресса
         
         // Обновляем боковое меню для режима библиотеки
         this.updateSideMenuForLibrary();
@@ -816,13 +818,46 @@ class BookReader {
 
     updateProgressDisplay(progress) {
         const progressText = document.getElementById('progressText');
-        const progressFill = document.getElementById('progressFill');
-        
+        const chapterInfo = document.getElementById('chapterInfo');
+        const chapterPages = document.getElementById('chapterPages');
+
+        if (!this.currentBook) return;
+
         // Ограничиваем прогресс от 0 до 100
         const clampedProgress = Math.min(100, Math.max(0, progress));
         
-        if (progressText) progressText.textContent = Math.round(clampedProgress) + '%';
-        if (progressFill) progressFill.style.width = clampedProgress + '%';
+        if (progressText) {
+            progressText.textContent = Math.round(clampedProgress) + '%';
+        }
+
+        // Информация о главе
+        const chapter = this.currentBook.chapters[this.currentChapter];
+        if (chapter && chapterInfo) {
+            chapterInfo.textContent = chapter.title;
+            chapterInfo.title = chapter.title; // Tooltip for long titles
+        }
+
+        // Расчет страниц в главе
+        if (chapterPages) {
+            const bookContent = document.getElementById('bookContent');
+            if (bookContent) {
+                const contentHeight = bookContent.scrollHeight;
+                const windowHeight = window.innerHeight;
+                const totalPages = Math.max(1, Math.ceil(contentHeight / windowHeight));
+                
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                let currentPage = Math.max(1, Math.floor(scrollTop / windowHeight) + 1);
+
+                // Коррекция для последней страницы
+                if (scrollTop + windowHeight >= contentHeight) {
+                    currentPage = totalPages;
+                }
+
+                chapterPages.textContent = `(${Math.min(currentPage, totalPages)}/${totalPages})`;
+            } else {
+                chapterPages.textContent = '';
+            }
+        }
         
         // Отладочная информация
         console.log('Progress update:', {
