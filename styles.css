@@ -269,8 +269,6 @@ h2 {
     align-items: center;
     justify-content: space-between;
     padding: var(--spacing-lg) var(--spacing-md);
-    background-color: var(--surface-color);
-    border-bottom: 1px solid var(--divider-color);
 }
 
 .library-header h2 {
@@ -1055,6 +1053,9 @@ body.modal-open {
 @media (min-width: 320px) and (max-width: 575px) {
  .reader-footer {
     height: 25px;
+ }
+ .library-header {
+    padding: 20px 0 0 0;
  }
 }
 
