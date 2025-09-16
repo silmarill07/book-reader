@@ -1091,3 +1091,42 @@ body.modal-open {
 #overlay.visible {
     display: block;
 }
+
+/* Notification Toast */
+.notification {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--surface-color);
+    color: var(--text-primary);
+    padding: 12px 20px;
+    border-radius: 25px;
+    box-shadow: var(--shadow-elevated);
+    z-index: 3000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.notification.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -50%);
+}
+
+@media (max-width: 768px) {
+    .notification {
+        width: calc(100% - 32px);
+        left: 16px;
+        right: 16px;
+        transform: translate(0, -50%);
+        border-radius: 8px;
+    }
+
+    .notification.show {
+        transform: translate(0, -50%);
+    }
+}

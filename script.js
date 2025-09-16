@@ -156,7 +156,7 @@ class BookReader {
                     );
 
                     if (isDuplicate) {
-                        alert(`Book "${book.title}" by ${book.author} is already in your library.`);
+                        this.showNotification(`Book "${book.title}" by ${book.author} is already in your library.`);
                         continue; // Skip to the next file
                     }
 
@@ -172,7 +172,7 @@ class BookReader {
                 }
             } catch (error) {
                 console.error('Помилка при завантаженні книги:', error);
-                alert(`Помилка при завантаженні файлу ${file.name}: ${error.message}`);
+                this.showNotification(`Помилка при завантаженні файлу ${file.name}: ${error.message}`);
             }
         }
         
@@ -618,7 +618,7 @@ class BookReader {
             if (epubFile) {
                 this.currentBook.epubFile = epubFile;
             } else {
-                alert('Could not load book content. Please try adding the book again.');
+                this.showNotification('Could not load book content. Please try adding the book again.');
                 return;
             }
         }
@@ -1160,6 +1160,20 @@ class BookReader {
         document.querySelectorAll('.modal').forEach(modal => {
             modal.classList.remove('open');
         });
+    }
+
+    showNotification(message) {
+        const notification = document.getElementById('notification');
+        const messageElement = document.getElementById('notificationMessage');
+
+        if (notification && messageElement) {
+            messageElement.textContent = message;
+            notification.classList.add('show');
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
     }
 
     // Сохранение и загрузка
