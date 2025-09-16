@@ -1232,33 +1232,3 @@ window.addEventListener('error', (e) => {
 });
 
 // Предотвращение потери данных при закрытии
-window.addEventListener('beforeunload', (e) => {
-    // Данные уже сохраняются автоматически при изменениях
-});ry {
-                this.settings = { ...this.settings, ...JSON.parse(saved) };
-            } catch (e) {
-                console.error('Помилка при завантаженні налаштувань:', e);
-            }
-        }
-    }
-
-    updateUI() {
-        this.updateLibrary();
-        this.updateSideMenuForLibrary();
-    }
-}
-
-// Инициализация приложения
-document.addEventListener('DOMContentLoaded', () => {
-    new BookReader();
-});
-
-// Обработка ошибок
-window.addEventListener('error', (e) => {
-    console.error('Помилка програми:', e.error);
-});
-
-// Предотвращение потери данных при закрытии
-window.addEventListener('beforeunload', (e) => {
-    // Данные уже сохраняются автоматически при изменениях
-});
