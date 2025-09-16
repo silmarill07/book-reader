@@ -55,6 +55,7 @@ class BookReader {
         document.getElementById('closeMenuBtn').addEventListener('click', () => this.closeSideMenu());
         document.getElementById('homeBtn').addEventListener('click', () => this.showLibrary());
         document.getElementById('chaptersBtn').addEventListener('click', () => this.toggleSideMenu());
+        document.getElementById('overlay').addEventListener('click', () => this.closeSideMenu());
         
         // Загрузка книг
         document.getElementById('addBookBtnMain').addEventListener('click', () => this.openFileDialog());
@@ -150,6 +151,23 @@ class BookReader {
             try {
                 const book = await this.parseBook(file);
                 if (book) {
+                    const isDuplicate = this.books.some(existingBook => 
+                        existingBook.title === book.title && existingBook.author === book.author
+                    );
+
+                    if (isDuplicate) {
+                        alert(`Book "${book.title}" by ${book.author} is already in your library.`);
+                        continue; // Skip to the next file
+                    }
+
+                    if (book.fileType === 'epub' && book.epubFile) {
+                        try {
+                            localStorage.setItem(`epub_${book.id}`, book.epubFile);
+                            delete book.epubFile;
+                        } catch (e) {
+                            throw new Error('Could not save EPUB file to local storage. File might be too large.');
+                        }
+                    }
                     this.books.push(book);
                 }
             } catch (error) {
@@ -409,7 +427,7 @@ class BookReader {
             const epubFileBase64 = await this.readFileAsBase64(file);
             console.log('ePub file converted to base64');
 
-            const chapters = toc.map(item => ({
+            const chapters = (toc || []).map(item => ({
                 title: item.label,
                 href: item.href
             }));
@@ -595,6 +613,15 @@ class BookReader {
 
     openBook(book) {
         this.currentBook = book;
+        if (this.currentBook.fileType === 'epub') {
+            const epubFile = localStorage.getItem(`epub_${this.currentBook.id}`);
+            if (epubFile) {
+                this.currentBook.epubFile = epubFile;
+            } else {
+                alert('Could not load book content. Please try adding the book again.');
+                return;
+            }
+        }
         this.currentChapter = book.currentChapter || 0;
         this.readingPosition = book.currentPosition || 0;
         
@@ -630,6 +657,7 @@ class BookReader {
     showLibrary() {
         document.getElementById('readerScreen').classList.remove('active');
         document.getElementById('libraryScreen').classList.add('active');
+        document.getElementById('chaptersBtn').style.display = 'none';
         this.closeSideMenu();
         
         // Очищаем обработчики прокрутки
@@ -1030,6 +1058,9 @@ class BookReader {
 
     confirmDelete() {
         if (this.bookToDelete) {
+            if (this.bookToDelete.fileType === 'epub') {
+                localStorage.removeItem(`epub_${this.bookToDelete.id}`);
+            }
             this.books = this.books.filter(book => book.id !== this.bookToDelete.id);
             this.saveBooks();
             this.updateLibrary();
@@ -1047,10 +1078,12 @@ class BookReader {
     // Боковое меню
     toggleSideMenu() {
         document.getElementById('sideMenu').classList.toggle('open');
+        document.getElementById('overlay').classList.toggle('visible');
     }
 
     closeSideMenu() {
         document.getElementById('sideMenu').classList.remove('open');
+        document.getElementById('overlay').classList.remove('visible');
     }
 
     updateSideMenuForLibrary() {
