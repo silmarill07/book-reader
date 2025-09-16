@@ -162,10 +162,11 @@ class BookReader {
 
                     if (book.fileType === 'epub' && book.epubFile) {
                         try {
-                            localStorage.setItem(`epub_${book.id}`, book.epubFile);
-                            delete book.epubFile;
+                            await bookDB.saveEpubFile(book.id, book.epubFile);
+                            // The epubFile content is now stored in IndexedDB, no need to keep it in the book object
+                            delete book.epubFile; 
                         } catch (e) {
-                            throw new Error('Could not save EPUB file to local storage. File might be too large.');
+                            throw new Error('Could not save EPUB file to IndexedDB. File might be too large or IndexedDB is not available.');
                         }
                     }
                     this.books.push(book);
@@ -611,10 +612,10 @@ class BookReader {
         });
     }
 
-    openBook(book) {
+    async openBook(book) {
         this.currentBook = book;
         if (this.currentBook.fileType === 'epub') {
-            const epubFile = localStorage.getItem(`epub_${this.currentBook.id}`);
+            const epubFile = await bookDB.getEpubFile(this.currentBook.id);
             if (epubFile) {
                 this.currentBook.epubFile = epubFile;
             } else {
@@ -1008,10 +1009,10 @@ class BookReader {
         this.bookToDelete = null;
     }
 
-    confirmDelete() {
+    async confirmDelete() {
         if (this.bookToDelete) {
             if (this.bookToDelete.fileType === 'epub') {
-                localStorage.removeItem(`epub_${this.bookToDelete.id}`);
+                await bookDB.deleteEpubFile(this.bookToDelete.id);
             }
             this.books = this.books.filter(book => book.id !== this.bookToDelete.id);
             this.saveBooks();

@@ -559,7 +559,7 @@ h2 {
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: var(--spacing-lg) var(--spacing-lg) 160px var(--spacing-lg);
+    padding: var(--spacing-lg) var(--spacing-lg) 260px var(--spacing-lg);
     height: calc(100vh - 120px);
     will-change: scroll-position;
     transform: translateZ(0);
