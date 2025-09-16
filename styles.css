@@ -47,7 +47,7 @@
 [data-theme="sepia"] {
     --background-color: #F4F1EA;
     --surface-color: #FDF6E3;
-    --text-primary: #5C4B37;
+    --text-primary: #212121;
     --text-secondary: #8B7355;
     --divider-color: #D4C4A8;
     --primary-color: #8B6F47;
@@ -57,7 +57,7 @@
 [data-theme="blue"] {
     --background-color: #E3F2FD;
     --surface-color: #F3F9FF;
-    --text-primary: #0D47A1;
+    --text-primary: #212121; /* Changed to black */
     --text-secondary: #1565C0;
     --divider-color: #90CAF9;
     --primary-color: #1976D2;
@@ -67,7 +67,7 @@
 [data-theme="green"] {
     --background-color: #E8F5E8;
     --surface-color: #F1F8E9;
-    --text-primary: #1B5E20;
+    --text-primary: #212121;
     --text-secondary: #2E7D32;
     --divider-color: #A5D6A7;
     --primary-color: #2E7D32;
@@ -1114,13 +1114,6 @@ body.modal-open {
         right: 16px;
         transform: translate(0, -50%);
         border-radius: 8px;
-    }
-
-    .notification.show {
-        transform: translate(0, -50%);
-    }
-}
-px;
     }
 
     .notification.show {
