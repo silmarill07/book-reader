@@ -27,6 +27,7 @@ class BookReader {
         this.restInterval = null;
         this.readingTime = 2700000; // 45 minutes in milliseconds
         this.restTime = 60; // 60 seconds
+        this.wakeLock = null; // To hold the wake lock sentinel
         
         this.init();
     }
@@ -742,6 +743,7 @@ class BookReader {
         this.updateSideMenuForLibrary();
 
         this.stopRestTimer();
+        this.releaseWakeLock(); // Add this line
     }
 
     renderBookContent() {
@@ -1206,6 +1208,33 @@ class BookReader {
         const saved = localStorage.getItem('bookReader_settings');
         if (saved) {
             try {
+                this.settings = { ...this.settings, ...JSON.parse(saved) };
+            } catch (e) {
+                console.error('Помилка при завантаженні налаштувань:', e);
+            }
+        }
+    }
+
+    updateUI() {
+        this.updateLibrary();
+        this.updateSideMenuForLibrary();
+    }
+}
+
+// Инициализация приложения
+document.addEventListener('DOMContentLoaded', () => {
+    new BookReader();
+});
+
+// Обработка ошибок
+window.addEventListener('error', (e) => {
+    console.error('Помилка програми:', e.error);
+});
+
+// Предотвращение потери данных при закрытии
+window.addEventListener('beforeunload', (e) => {
+    // Данные уже сохраняются автоматически при изменениях
+});ry {
                 this.settings = { ...this.settings, ...JSON.parse(saved) };
             } catch (e) {
                 console.error('Помилка при завантаженні налаштувань:', e);
