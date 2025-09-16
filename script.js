@@ -269,7 +269,7 @@ class BookReader {
     cleanXMLText(text) {
         // Убираем проблемные символы
         return text
-            .replace(/[ --]/g, '') // Удаляем управляющие символы
+            .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '') // Удаляем управляющие символы
             .replace(/&(?!amp;|lt;|gt;|quot;|apos;)/g, '&amp;') // Экранируем неэкранированные амперсанды
             .trim();
     }
@@ -743,7 +743,10 @@ class BookReader {
         
         // Прокручиваем к сохраненной позиции или в начало главы
         setTimeout(() => {
-            window.scrollTo(0, this.readingPosition);
+            const readerContent = document.querySelector('.reader-content');
+            if (readerContent) {
+                readerContent.scrollTo(0, this.readingPosition);
+            }
         }, 100);
         
         // Отслеживаем прогресс чтения
@@ -756,9 +759,6 @@ class BookReader {
         
         // Добавляем альтернативный способ отслеживания через MutationObserver
         this.setupProgressObserver();
-        
-        // Добавляем обработчик для сокрытия/показа полосы прогресса
-        this.addProgressToggleHandler();
     }
 
     trackReadingProgress() {
@@ -775,13 +775,16 @@ class BookReader {
             this.scrollHandler = null;
         }
 
+        const readerContent = document.querySelector('.reader-content');
+        if (!readerContent) return;
+
         // Debounced version of the actual progress tracking logic
         const debouncedTrack = debounce(() => {
             if (!this.currentBook) return;
 
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            const windowHeight = window.innerHeight;
-            const documentHeight = document.documentElement.scrollHeight;
+            const scrollTop = readerContent.scrollTop;
+            const windowHeight = readerContent.clientHeight;
+            const documentHeight = readerContent.scrollHeight;
             const totalChapters = this.currentBook.chapters.length;
 
             console.log('Scroll event:', {
@@ -827,13 +830,8 @@ class BookReader {
         };
 
         // Добавляем обработчики
-        window.addEventListener('scroll', this.scrollHandler, { passive: true });
+        readerContent.addEventListener('scroll', this.scrollHandler, { passive: true });
         window.addEventListener('resize', this.scrollHandler, { passive: true });
-
-        const readerContent = document.querySelector('.reader-content');
-        if (readerContent) {
-            readerContent.addEventListener('scroll', this.scrollHandler, { passive: true });
-        }
 
         // Вызываем сразу
         this.scrollHandler();
@@ -867,13 +865,13 @@ class BookReader {
 
         // Расчет страниц в главе
         if (chapterPages) {
-            const bookContent = document.getElementById('bookContent');
-            if (bookContent) {
-                const contentHeight = bookContent.scrollHeight;
-                const windowHeight = window.innerHeight;
+            const readerContent = document.querySelector('.reader-content');
+            if (readerContent) {
+                const contentHeight = readerContent.scrollHeight;
+                const windowHeight = readerContent.clientHeight;
                 const totalPages = Math.max(1, Math.ceil(contentHeight / windowHeight));
                 
-                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                const scrollTop = readerContent.scrollTop;
                 let currentPage = Math.max(1, Math.floor(scrollTop / windowHeight) + 1);
 
                 // Коррекция для последней страницы
@@ -925,56 +923,7 @@ class BookReader {
         }
     }
 
-    addProgressToggleHandler() {
-        const readerContent = document.querySelector('.reader-content');
-        const readerFooter = document.querySelector('.reader-footer');
-        
-        if (!readerContent || !readerFooter) return; 
-        
-        // Удаляем предыдущие обработчики
-        if (this.progressToggleHandler) {
-            readerContent.removeEventListener('click', this.progressToggleHandler);
-            readerContent.removeEventListener('touchend', this.progressToggleHandler);
-        }
-        
-        // Флаг для предотвращения двойного срабатывания
-        let isTouching = false;
-        let touchStartTime = 0;
-        
-        // Обработчик начала касания
-        const touchStartHandler = (e) => {
-            isTouching = true;
-            touchStartTime = Date.now();
-        };
-        
-        // Обработчик окончания касания/клика
-        this.progressToggleHandler = (e) => {
-            // Предотвращаем срабатывание на кнопках и ссылках
-            if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.next-chapter-btn')) {
-                return;
-            }
-            
-            // Для touch событий проверяем, что это был короткий тап
-            if (e.type === 'touchend') {
-                if (!isTouching || (Date.now() - touchStartTime) > 300) {
-                    return;
-                }
-                isTouching = false;
-            }
-            
-            // Предотвращаем двойное срабатывание
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Переключаем видимость полосы прогресса
-            readerFooter.classList.toggle('hidden');
-        };
-        
-        // Добавляем обработчики
-        readerContent.addEventListener('touchstart', touchStartHandler, { passive: true });
-        readerContent.addEventListener('touchend', this.progressToggleHandler, { passive: false });
-        readerContent.addEventListener('click', this.progressToggleHandler, { passive: false });
-    }
+    
 
     // Настройки
     showSettings() {
