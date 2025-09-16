@@ -411,7 +411,7 @@ h2 {
 
 .book-info-on-cover {
     position: absolute;
-    bottom: 20px; /* Над полосой прогресса */
+    bottom: 0; /* Над полосой прогресса */
     left: 0;
     right: 0;
     padding: 60px 10px 10px 10px;
@@ -454,14 +454,7 @@ h2 {
 }
 
 .book-progress {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 20px;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
+    display: none;
 }
 
 .book-progress-fill {
@@ -475,12 +468,17 @@ h2 {
 }
 
 .book-progress-text {
-    position: relative;
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background-color: rgba(0,0,0,0.6);
+    padding: 2px 6px;
+    border-radius: 4px;
+    width: auto;
+    text-align: left;
     z-index: 2;
-    width: 100%;
-    text-align: center;
     color: white;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 500;
     text-shadow: 1px 1px 1px rgba(0,0,0,0.7);
 }
@@ -937,7 +935,8 @@ h2 {
 
 @media (max-width: 480px) {
     .books-grid {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-md);
     }
     
     .book-title {
@@ -1044,6 +1043,6 @@ body.modal-open {
 
 @media (min-width: 320px) and (max-width: 575px) {
  .reader-footer {
-    height: 25px;
+    height: 18px;
  }
 }

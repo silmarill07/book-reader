@@ -251,7 +251,7 @@ class BookReader {
     cleanXMLText(text) {
         // Убираем проблемные символы
         return text
-            .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '') // Удаляем управляющие символы
+            .replace(/[ --]/g, '') // Удаляем управляющие символы
             .replace(/&(?!amp;|lt;|gt;|quot;|apos;)/g, '&amp;') // Экранируем неэкранированные амперсанды
             .trim();
     }
@@ -559,10 +559,7 @@ class BookReader {
                         <div class="book-title">${book.title}</div>
                         <div class="book-author">${book.author}</div>
                     </div>
-                    <div class="book-progress">
-                        <div class="book-progress-fill" style="width: ${Math.round(book.readingProgress)}%"></div>
-                        <span class="book-progress-text">${Math.round(book.readingProgress)}%</span>
-                    </div>
+                    <span class="book-progress-text">${Math.round(book.readingProgress)}%</span>
                 </div>
                 <div class="book-format-badge">${book.fileType.toUpperCase()}</div>
             </div>
