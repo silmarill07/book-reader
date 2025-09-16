@@ -173,6 +173,10 @@ h2 {
     display: none;
 }
 
+#homeBtn {
+    display: none;
+}
+
 /* Боковое меню */
 .side-menu {
     position: fixed;

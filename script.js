@@ -649,6 +649,7 @@ class BookReader {
         
         // Show chaptersBtn
         document.getElementById('chaptersBtn').style.display = 'flex'; // Assuming it's a flex container
+        document.getElementById('homeBtn').style.display = 'flex';
         
         // Обновляем боковое меню для режима чтения
         this.updateSideMenuForReading();
@@ -658,6 +659,7 @@ class BookReader {
         document.getElementById('readerScreen').classList.remove('active');
         document.getElementById('libraryScreen').classList.add('active');
         document.getElementById('chaptersBtn').style.display = 'none';
+        document.getElementById('homeBtn').style.display = 'none';
         this.closeSideMenu();
         
         // Очищаем обработчики прокрутки
