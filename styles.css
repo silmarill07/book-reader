@@ -86,10 +86,7 @@ body {
     background-color: var(--background-color);
     color: var(--text-primary);
     line-height: 1.6;
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    overflow-y: auto;
+    overflow: hidden;
 }
 
 h2 {
@@ -241,7 +238,7 @@ h2 {
     flex: 1;
     margin-top: var(--header-height);
     position: relative;
-    padding-bottom: 60px; /* Added for fixed footer */
+    padding-bottom: 20px; /* Adjusted for fixed footer */
 }
 
 .screen {
@@ -260,6 +257,8 @@ h2 {
 .screen.active {
     opacity: 1;
     visibility: visible;
+    display: flex;
+    flex-direction: column;
     z-index: 2;
 }
 
@@ -559,8 +558,7 @@ h2 {
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: var(--spacing-lg) var(--spacing-lg) 260px var(--spacing-lg);
-    height: calc(100vh - 120px);
+    padding: var(--spacing-lg);
     will-change: scroll-position;
     transform: translateZ(0);
 }
@@ -1116,6 +1114,13 @@ body.modal-open {
         right: 16px;
         transform: translate(0, -50%);
         border-radius: 8px;
+    }
+
+    .notification.show {
+        transform: translate(0, -50%);
+    }
+}
+px;
     }
 
     .notification.show {

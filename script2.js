@@ -552,8 +552,7 @@ class BookReader {
                     <small>Підтримуються формати: FB2, TXT</small>
                 </div>
             `;
-        }
-        else {
+        } else {
             libraryContent.innerHTML = `
                 <div class="books-grid" id="booksGrid"></div>
             `;
@@ -615,78 +614,34 @@ class BookReader {
 
     async openBook(book) {
         this.currentBook = book;
-        this.currentChapter = book.currentChapter || 0;
-        this.readingPosition = book.currentPosition || 0;
-
-        this.showReader(); // Show the reader screen first
-
         if (this.currentBook.fileType === 'epub') {
-            // If epubBook and rendition already exist for this book, just display to position
-            // Check if the existing epubBook is for the same book ID
-            if (this.epubBook && this.epubBook.url === this.currentBook.id && this.rendition) {
-                this.rendition.display(this.currentBook.currentPosition || 0);
-                this.updateProgressDisplay(this.currentBook.readingProgress);
-                this.updateSideMenuForReading();
-                this.startRestTimer();
-                localStorage.setItem('lastBookId', book.id);
-                return; // Exit early if already rendered
-            }
-
             const epubFile = await bookDB.getEpubFile(this.currentBook.id);
             if (epubFile) {
                 this.currentBook.epubFile = epubFile;
-                const blob = new Blob([epubFile], { type: 'application/epub+zip' });
-                
-                try {
-                    this.epubBook = window.ePub(blob);
-                    // Store the book ID with the epubBook instance for later comparison
-                    this.epubBook.url = this.currentBook.id; 
-
-                    await this.epubBook.ready;
-                    await this.epubBook.locations.generate(this.settings.sectionBreak);
-
-                    this.rendition = this.epubBook.renderTo('bookContent', {
-                        width: '100%',
-                        height: '100%',
-                        manager: 'continuous',
-                        flow: 'paginated'
-                    });
-
-                    this.rendition.on('relocated', (location) => {
-                        this.currentBook.currentChapter = location.start.index;
-                        this.currentBook.currentPosition = location.start.percentage;
-                        console.log('EPUB relocated event: saved position', this.currentBook.currentPosition);
-                        this.saveBooks();
-                        this.updateProgressDisplay(location.start.percentage * 100);
-                        this.updateSideMenuForReading();
-                    });
-
-                    // Display to the saved position immediately after creation
-                    console.log('openBook: EPUB - attempting to display to position', this.currentBook.currentPosition || 0);
-                    this.rendition.display(this.currentBook.currentPosition || 0);
-                    this.updateProgressDisplay(this.currentBook.readingProgress);
-                    this.updateSideMenuForReading();
-                    this.startRestTimer();
-
-                } catch (epubError) {
-                    console.error('Error during Epub.js initialization or rendering:', epubError);
-                    this.showNotification(`Error opening EPUB: ${epubError.message || epubError}`);
-                    document.getElementById('bookContent').innerHTML = '<p style="text-align: center; color: red;">Failed to render EPUB content.</p>';
-                }
             } else {
                 this.showNotification('Could not load book content. Please try adding the book again.');
+                return;
             }
-        } else {
-            // For non-EPUB books, reset epubBook and rendition
-            this.epubBook = null;
-            this.rendition = null;
-            console.log('openBook: Non-EPUB - loaded currentChapter', this.currentChapter, 'readingPosition', this.readingPosition);
-            this.renderBookContent(); // Call renderBookContent for non-EPUBs
-            this.updateProgressDisplay(this.currentBook.readingProgress);
-            this.updateSideMenuForReading();
-            this.startRestTimer();
         }
+        this.currentChapter = book.currentChapter || 0;
+        this.readingPosition = book.currentPosition || 0;
+        
+        this.showReader();
+        this.renderBookContent();
+        
+        // Рассчитываем прогресс с учетом прочитанных глав
+        const totalChapters = book.chapters.length;
+        const chaptersRead = this.currentChapter;
+        const currentChapterProgress = 0; // Начинаем с начала главы
+        const totalProgress = ((chaptersRead + currentChapterProgress) / totalChapters) * 100;
+        
+        // Устанавливаем начальный прогресс
+        this.updateProgressDisplay(totalProgress);
+        
+        // Сохраняем ID последней книги
         localStorage.setItem('lastBookId', book.id);
+
+        this.startRestTimer();
     }
 
     showReader() {
@@ -745,19 +700,12 @@ class BookReader {
     }
 
     renderBookContent() {
-        const bookContent = document.getElementById('bookContent');
-        if (!bookContent) return; 
-
-        if (this.currentBook.fileType === 'epub') {
-            // EPUBs are handled in openBook, so just return here
-            const nextChapterSection = document.querySelector('.next-chapter-section');
-            if (nextChapterSection) nextChapterSection.style.display = 'none';
-            return;
-        }
-
         if (!this.currentBook || !this.currentBook.chapters[this.currentChapter]) return; 
         
         const chapter = this.currentBook.chapters[this.currentChapter];
+        const bookContent = document.getElementById('bookContent');
+        
+        if (!bookContent) return; 
         
         // Проверяем, есть ли следующая глава
         const hasNextChapter = this.currentChapter < this.currentBook.chapters.length - 1;
@@ -795,14 +743,12 @@ class BookReader {
         this.applySettings();
         
         // Прокручиваем к сохраненной позиции или в начало главы
-        requestAnimationFrame(() => {
+        setTimeout(() => {
             const readerContent = document.querySelector('.reader-content');
             if (readerContent) {
-                console.log('renderBookContent: Non-EPUB - attempting to scroll to', this.readingPosition);
-                console.log('renderBookContent: Non-EPUB - scrollHeight', readerContent.scrollHeight, 'clientHeight', readerContent.clientHeight);
                 readerContent.scrollTo(0, this.readingPosition);
             }
-        });
+        }, 100);
         
         // Отслеживаем прогресс чтения
         this.trackReadingProgress();
@@ -877,7 +823,6 @@ class BookReader {
             // Сохраняем позицию
             this.currentBook.readingProgress = totalProgress;
             this.currentBook.currentPosition = scrollTop;
-            console.log('trackReadingProgress: Non-EPUB - saved position', this.currentBook.currentPosition);
             this.saveBooks();
         }, 150); // Debounce by 150ms
 
