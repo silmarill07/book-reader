@@ -661,6 +661,7 @@ class BookReader {
         document.getElementById('chaptersBtn').style.display = 'none';
         document.getElementById('homeBtn').style.display = 'none';
         this.closeSideMenu();
+        window.scrollTo(0, 0);
         
         // Очищаем обработчики прокрутки
         if (this.scrollHandler) {
